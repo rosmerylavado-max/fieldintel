@@ -54,7 +54,7 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="header">
   <div class="header-top">
     <span class="logo">Field Intel</span>
@@ -66,7 +66,7 @@
   <h1>Registro de <span>Visita</span> a Campo</h1>
   <div class="counter-badge">✓ <span id="visitCount">—</span> visitas en la BD</div>
 </div>
-
+ 
 <div class="container">
   <div class="section-label">📍 Datos de la visita</div>
   <div class="card">
@@ -82,27 +82,27 @@
           <option value="">Seleccionar</option>
           <option>Bodega independiente</option><option>Minimarket</option>
           <option>Mercado de abastos</option><option>Supermercado</option>
-          <option>Farmacia</option><option>Otro</option>
+          <option>Cash & Carry</option><option>Farmacia</option><option>Otro</option>
         </select>
       </div>
     </div>
     <div class="field-group"><label>Ejecutivo</label><input type="text" id="ejecutivo" placeholder="Tu nombre"/></div>
   </div>
-
+ 
   <div class="section-label">🔵 SKUs Softys</div>
   <div class="card accent-softys">
     <div class="sku-header"><span class="badge s">SOFTYS</span><span style="font-size:12px;color:var(--muted)">Productos propios encontrados</span></div>
     <div id="softys-skus"></div>
     <button class="add-btn" onclick="addSku('softys')">+ Agregar SKU Softys</button>
   </div>
-
+ 
   <div class="section-label">🟠 SKUs Competencia</div>
   <div class="card accent-comp">
     <div class="sku-header"><span class="badge c">COMPETENCIA</span><span style="font-size:12px;color:var(--muted)">Productos competidores</span></div>
     <div id="comp-skus"></div>
     <button class="add-btn" onclick="addSku('comp')">+ Agregar SKU competencia</button>
   </div>
-
+ 
   <div class="section-label">📝 Observaciones</div>
   <div class="card">
     <div class="field-group"><label>Hallazgos cualitativos</label><textarea id="obs" placeholder="Ej: Bodeguero menciona promoción 2x1 de competencia..."></textarea></div>
@@ -118,11 +118,11 @@
   <button class="submit-btn" onclick="submitForm()" id="submitBtn">⬆ REGISTRAR VISITA</button>
 </div>
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 var API = "https://script.google.com/macros/s/AKfycbyIDmneL5AeksDsjRYg0GcmotDInnDcYHg1uLxydMVRw3EjD2eFXzBO_LGed3jgo9ts/exec";
 var cnt = {softys:0, comp:0};
-
+ 
 // ── JSONP: única forma de llamar Apps Script sin CORS ──
 function jsonp(url, callback) {
   var name = 'cb_' + Date.now();
@@ -141,7 +141,7 @@ function jsonp(url, callback) {
   };
   document.head.appendChild(s);
 }
-
+ 
 function checkConnection() {
   jsonp(API + '?action=load', function(data) {
     if (data && data.ok) {
@@ -154,19 +154,21 @@ function checkConnection() {
     }
   });
 }
-
+ 
 function addSku(type) {
   var id = ++cnt[type];
   var con = document.getElementById(type + '-skus');
   var brands = type === 'softys'
-    ? ['Elite','Nova','Suave','Favorit','Higienol','Ladysoft','Otro']
-    : ['Nosotras','Suave','Scott','Kleenex','Familia','Rosal','Aro','Otro'];
+    ? ['Elite','Elite Mega','Elite Folha Dupla','Nova','Suave','Suave Folha Dupla','Favorit','Higienol','Ladysoft','Personal','Neve','Pom Pom','Snob','Outro']
+    : ['Nosotras','Kotex','Always','Scott','Scott Folha Dupla','Kleenex','Familia','Familia Neutro','Rosal','Aro','Pampers','Huggies','Intimus','Carefree','Bom Bril','Outro'];
   var d = document.createElement('div');
   d.className = 'sku-row'; d.id = type + '-' + id;
   d.innerHTML =
     '<div class="fm" style="flex:2"><label>Marca/SKU</label>' +
-    '<select class="b" data-t="' + type + '" data-i="' + id + '"><option value="">—</option>' +
-    brands.map(function(b){ return '<option>' + b + '</option>'; }).join('') + '</select></div>' +
+    '<select class="b" data-t="' + type + '" data-i="' + id + '" onchange="toggleOtro(\'' + type + '\',\'' + id + '\')">' +
+    '<option value="">—</option>' +
+    brands.map(function(b){ return '<option>' + b + '</option>'; }).join('') + '</select>' +
+    '<input type="text" class="bo" data-t="' + type + '" data-i="' + id + '" placeholder="Escribe la marca..." style="display:none;margin-top:6px;font-size:13px;padding:7px 9px;"/></div>' +
     '<div class="fm"><label>Q rollos/paq.</label><input type="number" min="1" class="q" data-t="' + type + '" data-i="' + id + '" placeholder="4" oninput="cp(\'' + type + '\',\'' + id + '\')"/></div>' +
     '<div class="fm"><label>Metros/rollo</label><input type="number" min="1" step="0.5" class="m" data-t="' + type + '" data-i="' + id + '" placeholder="20" oninput="cp(\'' + type + '\',\'' + id + '\')"/></div>' +
     '<div class="fm"><label>Precio paq.(S/)</label><input type="number" min="0" step="0.01" class="p" data-t="' + type + '" data-i="' + id + '" placeholder="0.00" oninput="cp(\'' + type + '\',\'' + id + '\')"/></div>' +
@@ -176,7 +178,16 @@ function addSku(type) {
   c.className = 'price-calc'; c.id = 'pc-' + type + '-' + id;
   con.appendChild(c);
 }
-
+ 
+function toggleOtro(t, i) {
+  var sel = document.querySelector('.b[data-t="'+t+'"][data-i="'+i+'"]');
+  var inp = document.querySelector('.bo[data-t="'+t+'"][data-i="'+i+'"]');
+  if (!sel || !inp) return;
+  var isOtro = sel.value === 'Outro' || sel.value === 'Otro';
+  inp.style.display = isOtro ? 'block' : 'none';
+  if (isOtro) inp.focus();
+}
+ 
 function cp(t, i) {
   var q = parseFloat(document.querySelector('.q[data-t="'+t+'"][data-i="'+i+'"]').value)||0;
   var m = parseFloat(document.querySelector('.m[data-t="'+t+'"][data-i="'+i+'"]').value)||0;
@@ -185,17 +196,21 @@ function cp(t, i) {
   if(el && q>0 && p>0){el.classList.add('v');el.textContent='P/rollo: S/'+(p/q).toFixed(2)+(m>0?'  ·  P/metro: S/'+(p/(q*m)).toFixed(3):'');}
   else if(el) el.classList.remove('v');
 }
-
+ 
 function rmSku(t,i){
   var a=document.getElementById(t+'-'+i); if(a)a.remove();
   var b=document.getElementById('pc-'+t+'-'+i); if(b)b.remove();
 }
-
+ 
 function collectSkus(type) {
   var skus = [];
   document.querySelectorAll('.q[data-t="'+type+'"]').forEach(function(el) {
     var i = el.dataset.i;
-    var brand = document.querySelector('.b[data-t="'+type+'"][data-i="'+i+'"]').value||'';
+    var sel = document.querySelector('.b[data-t="'+type+'"][data-i="'+i+'"]');
+    var selVal = sel ? sel.value : '';
+    var isOtro = selVal === 'Outro' || selVal === 'Otro';
+    var openField = document.querySelector('.bo[data-t="'+type+'"][data-i="'+i+'"]');
+    var brand = isOtro ? (openField ? openField.value.trim() : '') : selVal;
     var q = parseFloat(el.value)||null;
     var metros = parseFloat(document.querySelector('.m[data-t="'+type+'"][data-i="'+i+'"]').value)||null;
     var pp = parseFloat(document.querySelector('.p[data-t="'+type+'"][data-i="'+i+'"]').value)||null;
@@ -206,7 +221,7 @@ function collectSkus(type) {
   });
   return skus;
 }
-
+ 
 function submitForm() {
   var fecha = document.getElementById('fecha').value;
   var pdv = document.getElementById('pdv').value.trim();
@@ -214,10 +229,10 @@ function submitForm() {
   if(!fecha||!pdv||!distrito){showToast('Completa los campos requeridos (*)',true);return;}
   var ss = collectSkus('softys'), cs = collectSkus('comp');
   if(!ss.length&&!cs.length){showToast('Agrega al menos un SKU',true);return;}
-
+ 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'GUARDANDO...';
-
+ 
   var visit = {
     fecha:fecha, hora:document.getElementById('hora').value,
     pdv:pdv, distrito:distrito,
@@ -227,7 +242,7 @@ function submitForm() {
     observaciones:document.getElementById('obs').value,
     exhibicion:document.getElementById('exhibicion').value
   };
-
+ 
   // Codificar los datos en la URL para enviarlos via JSONP (GET)
   var params = encodeURIComponent(JSON.stringify(visit));
   jsonp(API + '?action=save&visit=' + params, function(data) {
@@ -240,7 +255,7 @@ function submitForm() {
     btn.disabled = false; btn.textContent = '⬆ REGISTRAR VISITA';
   });
 }
-
+ 
 function resetForm() {
   document.getElementById('pdv').value='';
   document.getElementById('obs').value='';
@@ -253,13 +268,13 @@ function resetForm() {
   document.getElementById('hora').value=new Date().toTimeString().slice(0,5);
   checkConnection();
 }
-
+ 
 function showToast(msg,isErr){
   var t=document.getElementById('toast');
   t.textContent=msg; t.className='toast'+(isErr?' err':'');
   t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},3500);
 }
-
+ 
 window.addEventListener('load', function(){
   var now=new Date();
   document.getElementById('fecha').value=now.toISOString().split('T')[0];
